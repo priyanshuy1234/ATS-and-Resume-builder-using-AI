@@ -1,39 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './LoginForm.css';
+import { UserContext } from './UserContext';
 
 const LoginForm = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { setUser } = useContext(UserContext);
+
   const navigate = useNavigate();
+
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+};
 
   async function submit(e) {
     e.preventDefault();
 
-    try {
+    setLoading(true);
+        setMessage('');
 
-      await axios.post("http://localhost:3001/", {
-        email, password
-      })
-        .then(res => {
-          if (res.data === "exist") {
-            navigate("/home", { state: { id: email } })
-          }
-          else if (res.data === "notexist") {
-            alert("User have not sign up")
-          }
-        })
-        .catch(e => {
-          alert("wrong details")
-          console.log(e);
-        })
-
-    }
-    catch (e) {
-      console.log(e);
-
-    }
+        try {
+            const response = await axios.post('http://localhost:3001/login', formData);
+            if (response.data.success) {
+                setMessage("Login successful! Redirecting...");
+                setUser(response.data.user.username);
+                setFormData({ email: '', password: '' }); // Clear form
+                setTimeout(() => {
+                    navigate('/home'); // Redirect to homepage
+                }, 2000);
+            } else {
+                setMessage("Incorrect email or password.");
+                setFormData({ email: '', password: '' }); // Reset inputs on failure
+            }
+        } catch (error) {
+            if (error.response) {
+                setMessage(error.response.data.message || "Login failed. Please try again.");
+                setFormData({ email: '', password: '' }); // Reset inputs on failure
+            } else if (error.request) {
+                setMessage("No response from the server. Please try again later.");
+                setFormData({ email: '', password: '' }); // Reset inputs on failure
+            } else {
+                setMessage("An unexpected error occurred.");
+                setFormData({ email: '', password: '' }); // Reset inputs on failure
+            }
+        } finally {
+            setLoading(false);
+        }
 
   }
 
@@ -41,23 +57,26 @@ const LoginForm = () => {
   return (
     <div className="form-container">
       <form onSubmit={submit} className="form">
-        <h2>Login to ResumeRankerX</h2>
+        <h2>Login to Resume Generator</h2>
         <input
           type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          name='email'
+          value={formData.email}
+          onChange={handleChange}
           placeholder="Enter Your Email"
           required
         />
         <input
           type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          name='password'
+          value={formData.password}
+          onChange={handleChange}
           placeholder="Enter Password"
           required
         />
-        <button type="submit" onClick={submit}>Login</button>
-
+        <button type="submit" disabled={loading}>
+          {loading ? "Signing Up..." : "Sign Up"}
+        </button>
         <div className="forgot-password">Forgot password?</div>
         <div className="signup">
           <p>New user?</p>
@@ -74,6 +93,7 @@ const LoginForm = () => {
           <button type="button" onClick={() => navigate('/home')}>Guest User</button>
         </div>
       </form>
+      {message && <p className="message">{message}</p>}
     </div>
   );
 };

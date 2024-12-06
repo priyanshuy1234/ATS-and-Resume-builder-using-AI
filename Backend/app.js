@@ -6,6 +6,9 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+const userHelper = require('./helpers/userHelper');
+var db = require('./config/connection');
+const session = require('express-session');
 
 const app = express();
 const port = 3001;
@@ -21,7 +24,7 @@ require('dotenv').config();
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
 async function getGeminiResponse(prompt) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
   const result = await model.generateContent(prompt);
   const response = await result.response;
@@ -74,6 +77,53 @@ IMPORTANT - USE WHITE SPACE AND NEXT LINE IN OUTPUT
   }
 });
 
+db.connect((err)=>{
+  if(err){
+      console.log("Error found" + err);
+  }else{
+      console.log("Connected to database");
+  }
+})
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'this12session#', // Use an environment variable for session secret
+  resave: false, 
+  saveUninitialized: true, 
+  cookie: { 
+      maxAge: 600000, 
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production' 
+  }
+}));
+
+
+
+
+app.post('/signup',async(req,res)=>{
+  try{
+      const UserData = req.body;
+      const result = await userHelper.DoSignup(UserData);
+      res.status(201).json({ success: true, message: "Registration Successfull", userId:result.InsertedId})
+  }catch (err){
+      console.log(err)
+      res.status(400).json({success: false,message:err} )
+  }
+})
+
+app.post('/login', (req, res) => {
+  userHelper.DoLogIn(req.body).then((response) => {
+      if (response.status) {
+          req.session.loggedIn = true;
+          req.session.user = response.user;
+          res.json({ success: true, user: response.user });
+      } else {
+          res.json({ success: false, message: "Incorrect email or password" });
+      }
+  }).catch((err) => {
+      console.error("Error during login:", err);
+      res.status(500).json({ success: false, message: "Internal server error" });
+  });
+});
 
 
 

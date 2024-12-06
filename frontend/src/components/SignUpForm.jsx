@@ -4,75 +4,74 @@ import { useNavigate } from 'react-router-dom';
 import './LoginForm.css';
 
 const SignUpForm = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false); 
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   async function submit(e) {
     e.preventDefault();
 
+    setLoading(true); // Indicate loading
+    setMessage(''); // Clear previous messages
+
     try {
-
-      await axios.post("http://localhost:3001/signup", {
-        username, email, password
-      })
-        .then(res => {
-          if (res.data === "exist") {
-            alert("User already exists")
-          }
-          else if (res.data === "notexist") {
-            navigate("/login", { state: { id: username } })
-          }
-        })
-        .catch(e => {
-          alert("wrong details")
-          console.log(e);
-        })
-
+      const response = await axios.post('http://localhost:3001/signup', formData);
+      if (response.data.success) {
+        setMessage("Signup successful! You can now log in.");
+        setFormData({ email: '', password: '' }); // Clear form
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
+      }
+    } catch (error) {
+      if (error.response) {
+        setMessage(error.response.data.message || "Error occurred during signup.");
+      } else if (error.request) {
+        setMessage("No response from the server. Please try again later.");
+      } else {
+        setMessage("An unexpected error occurred.");
+      }
+    } finally {
+      setLoading(false); // Stop loading
     }
-    catch (e) {
-      console.log(e);
-
-    }
-
   }
-
 
   return (
     <div className="form-container">
       <form onSubmit={submit} className="form">
-        <h2>Sign Up to ResumeRankerX</h2>
+        <h2>Sign Up to Resume Generator</h2>
         <input
           type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          name="username"
+          value={formData.username}
+          onChange={handleChange}
           placeholder="Username"
           required
         />
         <input
           type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
           placeholder="Email"
           required
         />
         <input
           type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
           placeholder="Password"
           required
         />
-        <input
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm Password"
-          required
-        />
-        <button type="submit">Sign Up</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Signing Up..." : "Sign Up"}
+        </button>
 
         <div className="social-signup">
           <p>May also signup with</p>
@@ -83,10 +82,13 @@ const SignUpForm = () => {
 
         <div className="login">
           <p>Already have an account?</p>
-          <button type="button" onClick={() => navigate('/login')}>Login Now</button>
+          <button type="button" onClick={() => navigate('/login')}>
+            Login Now
+          </button>
         </div>
-
       </form>
+
+      {message && <p className="message">{message}</p>}
     </div>
   );
 };

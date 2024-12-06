@@ -15,7 +15,7 @@ const ResumeUploadForm = () => {
     formData.append('jd', jobDescription);
 
     try {
-      const response = await axios.post('https://ats-backend-deploy-1.onrender.com/upload', formData);
+      const response = await axios.post('http://localhost:3001/upload', formData);
       console.log(response.data.response);
       setAnswer(response.data.response);
     } catch (err) {

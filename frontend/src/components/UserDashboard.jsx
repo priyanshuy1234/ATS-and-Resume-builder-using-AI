@@ -1,9 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useContext } from 'react';
+import { UserContext } from './UserContext';
 import './UserDashboard.css';
 
 const UserDashboard = () => {
-  const username = "user"; 
+  const { user } = useContext(UserContext);
+  const username = user ? user : "User"; 
   const footerRef = useRef(null);
 
   useEffect(() => {
@@ -24,7 +27,7 @@ const UserDashboard = () => {
     <div className="dashboard-container">
       <header className="navbar">
         <div className="navbar-left">
-          <h2>ResumeRankerX</h2>
+          <h2>Resume Generator</h2>
         </div>
         <div className="navbar-right">
           <span>{username}</span>
@@ -41,7 +44,7 @@ const UserDashboard = () => {
           </nav>
         </aside>
         <section className="content-dashboard">
-          <h1 id="h1">Welcome to ResumeRankerX</h1>
+          <h1 id="h1">Welcome to Resume Generator</h1>
           <p id="p">Use the navigation menu to access different features.</p>
           <h2>Website Features</h2>
 
@@ -82,8 +85,7 @@ const UserDashboard = () => {
 
           <footer ref={footerRef} className="footer">
             <div className="footer-content">
-              <p id="footer-p">Contact Us: support@resumerankerx.com</p>
-              <p id="footer-p">Phone: +123-456-7890</p>
+              <p id="footer-p">Resume Generator</p>
               {/* <div className="social-media">
             <a href="https://static-00.iconduck.com/assets.00/instagram-icon-512x512-ggh8x3cn.png"><img src="https://p7.hiclipart.com/preview/727/121/157/logo-computer-icons-brand-instagram-logo.jpg" alt="Instagram" /></a>
             <a href="www.instagram.com"><i class="fa-brands fa-instagram"></i></a>

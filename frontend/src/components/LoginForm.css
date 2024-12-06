@@ -79,3 +79,9 @@
   margin: 0 10px;
   cursor: pointer;
 }
+.message {
+  position: absolute;
+  top: 10px;
+  color: green;
+  font-size: 14px;
+}
